@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hangman</title>
+  <link rel="stylesheet" href="games.css" />
+  <style>
+    .figure-container { stroke: var(--fg); stroke-width: 4px; fill: transparent; }
+    .figure-part { visibility: hidden; }
+    #word-display { display: flex; gap: 10px; font-size: 2rem; margin: 20px 0; letter-spacing: 5px; }
+    #keyboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(40px, 1fr)); gap: 5px; max-width: 500px; }
+    #keyboard button { font-size: 1rem; padding: 12px; }
+    #keyboard button:disabled { opacity: 0.4; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <a href="../index.html">← Back to Hub</a>
+    <strong>🤔🔤 Hangman</strong>
+    <button id="themeToggle" class="theme" aria-label="Toggle theme">🌙</button>
+  </header>
+  <main class="container">
+    <div class="controls">
+      <button id="newWordBtn">New Word</button>
+      <span class="meta">Streak: <span id="streak">0</span></span>
+      <span class="meta">Best Streak: <span id="bestStreak">0</span></span>
+    </div>
+    <svg height="250" width="200" class="figure-container">
+      <line x1="60" y1="20" x2="140" y2="20" /> <line x1="140" y1="20" x2="140" y2="50" />
+      <line x1="60" y1="20" x2="60" y2="230" /> <line x1="20" y1="230" x2="100" y2="230" />
+      <circle cx="140" cy="70" r="20" class="figure-part" />
+      <line x1="140" y1="90" x2="140" y2="150" class="figure-part" />
+      <line x1="140" y1="120" x2="120" y2="100" class="figure-part" />
+      <line x1="140" y1="120" x2="160" y2="100" class="figure-part" />
+      <line x1="140" y1="150" x2="120" y2="180" class="figure-part" />
+      <line x1="140" y1="150" x2="160" y2="180" class="figure-part" />
+    </svg>
+    <div id="word-display"></div>
+    <p id="status" class="meta"></p>
+    <div id="keyboard"></div>
+  </main>
+  <script>
+    const root=document.documentElement;const themeBtn=document.getElementById('themeToggle');
+    const saved=localStorage.getItem('theme'); if(saved==='light') root.classList.add('light');
+    themeBtn.textContent=root.classList.contains('light')?'🌞':'🌙';
+    themeBtn.addEventListener('click',()=>{root.classList.toggle('light'); localStorage.setItem('theme',root.classList.contains('light')?'light':'dark'); themeBtn.textContent=root.classList.contains('light')?'🌞':'🌙';});
+
+    const words = ['JAVASCRIPT', 'DEVELOPER', 'INTERFACE', 'COMPONENT', 'FRAMEWORK', 'LIBRARY'];
+    const wordDisplay = document.getElementById('word-display');
+    const keyboardEl = document.getElementById('keyboard');
+    const statusEl = document.getElementById('status');
+    const figureParts = document.querySelectorAll('.figure-part');
+    let secretWord, guessedLetters, wrongGuesses, streak = 0, bestStreak = localStorage.getItem('hangman_best_streak') || 0;
+
+    function startGame() {
+      secretWord = words[Math.floor(Math.random() * words.length)];
+      guessedLetters = []; wrongGuesses = 0; statusEl.textContent = '';
+      figureParts.forEach(p => p.style.visibility = 'hidden');
+      renderWord();
+      renderKeyboard();
+      updateStreak();
+    }
+
+    function renderWord() {
+      wordDisplay.innerHTML = secretWord.split('').map(letter => `<span>${guessedLetters.includes(letter) ? letter : '_'}</span>`).join('');
+    }
+
+    function renderKeyboard() {
+      keyboardEl.innerHTML = '';
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(letter => {
+        const btn = document.createElement('button');
+        btn.textContent = letter;
+        btn.disabled = guessedLetters.includes(letter);
+        btn.addEventListener('click', () => handleGuess(letter));
+        keyboardEl.appendChild(btn);
+      });
+    }
+
+    function handleGuess(letter) {
+      guessedLetters.push(letter);
+      if (secretWord.includes(letter)) {
+        renderWord();
+      } else {
+        wrongGuesses++;
+        figureParts[wrongGuesses - 1].style.visibility = 'visible';
+      }
+      checkGameState();
+      renderKeyboard();
+    }
+
+    function checkGameState() {
+      if (wrongGuesses === figureParts.length) {
+        statusEl.textContent = `You lost! The word was ${secretWord}.`;
+        streak = 0;
+        endGame();
+      } else if (secretWord.split('').every(l => guessedLetters.includes(l))) {
+        statusEl.textContent = '🎉 You won!';
+        streak++;
+        if (streak > bestStreak) {
+          bestStreak = streak;
+          localStorage.setItem('hangman_best_streak', bestStreak);
+        }
+        endGame();
+      }
+      updateStreak();
+    }
+    
+    function endGame() {
+        keyboardEl.querySelectorAll('button').forEach(b => b.disabled = true);
+    }
+
+    function updateStreak() {
+        document.getElementById('streak').textContent = streak;
+        document.getElementById('bestStreak').textContent = bestStreak;
+    }
+
+    document.getElementById('newWordBtn').addEventListener('click', startGame);
+    startGame();
+  </script>
+</body>
+</html>

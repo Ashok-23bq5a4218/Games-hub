@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Game Hub</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🎮</text></svg>">
+</head>
+<body>
+  <header class="container header">
+    <h1>🎮 Mini Game Hub</h1>
+    <div class="header-actions">
+      <button id="themeToggle" aria-label="Toggle theme">🌙</button>
+      <a class="btn" href="https://github.com/Ashok-23bq1a5418" target="_blank" rel="noreferrer">⭐ Star</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <p class="tagline">Eight bite-sized games. Zero backend. 100% fun.</p>
+
+    <section class="grid">
+      <a class="card" href="games/guess.html">
+        <div class="card-emoji">🔢</div>
+        <h2>Guess the Number</h2>
+        <p>Pick 1–100. Get hints. Beat your best attempts.</p>
+        <small class="meta"><span id="guessBest">Best: —</span></small>
+      </a>
+
+      <a class="card" href="games/tictactoe.html">
+        <div class="card-emoji">❌⭕</div>
+        <h2>Tic‑Tac‑Toe</h2>
+        <p>2‑Player or vs CPU (simple). Three in a row!</p>
+        <small class="meta"><span id="tttStats">W/L: —</span></small>
+      </a>
+
+      <a class="card" href="games/rps.html">
+        <div class="card-emoji">✊✋✌️</div>
+        <h2>Rock • Paper • Scissors</h2>
+        <p>Best of luck vs the computer.</p>
+        <small class="meta"><span id="rpsBest">Best Streak: —</span></small>
+      </a>
+
+      <a class="card" href="games/memory.html">
+        <div class="card-emoji">🧠🃏</div>
+        <h2>Memory Cards</h2>
+        <p>Flip & match pairs. Fewer moves, better score.</p>
+        <small class="meta"><span id="memoryBest">Best Moves: —</span></small>
+      </a>
+
+      <a class="card" href="games/snake.html">
+        <div class="card-emoji">🐍🍎</div>
+        <h2>Classic Snake</h2>
+        <p>Eat the apples to grow. Don't hit the walls or yourself!</p>
+        <small class="meta"><span id="snakeBest">High Score: —</span></small>
+      </a>
+
+      <a class="card" href="games/hangman.html">
+        <div class="card-emoji">🤔🔤</div>
+        <h2>Hangman</h2>
+        <p>Guess the word one letter at a time. Track your streak.</p>
+        <small class="meta"><span id="hangmanBest">Best Streak: —</span></small>
+      </a>
+
+      <a class="card" href="games/whackamole.html">
+        <div class="card-emoji">🔨🐿️</div>
+        <h2>Whack-a-Mole</h2>
+        <p>Test your reflexes. Whack the moles as they pop up!</p>
+        <small class="meta"><span id="whackamoleBest">High Score: —</span></small>
+      </a>
+      
+      <a class="card" href="games/simon.html">
+        <div class="card-emoji">🔵🔴🟡🟢</div>
+        <h2>Simon Says</h2>
+        <p>Repeat the growing pattern of colors and sounds.</p>
+        <small class="meta"><span id="simonBest">Best Level: —</span></small>
+      </a>
+      </section>
+  </main>
+
+  <footer class="container footer">
+    <span>Made with ❤️ | LocalStorage highscores | No backend</span>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Whack-a-Mole</title>
+  <link rel="stylesheet" href="games.css" />
+  <style>
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 300px; margin-top: 20px; }
+    .hole { width: 90px; height: 90px; background-color: #8B4513; border-radius: 50%; border: 5px solid #A0522D; }
+    .mole { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🐿️</text></svg>'); background-size: 70%; background-position: center; background-repeat: no-repeat; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <a href="../index.html">← Back to Hub</a>
+    <strong>🔨🐿️ Whack-a-Mole</strong>
+    <button id="themeToggle" class="theme" aria-label="Toggle theme">🌙</button>
+  </header>
+  <main class="container">
+    <div class="controls">
+      <button id="startBtn">Start Game</button>
+      <span class="meta">Time: <span id="time-left">0</span>s</span>
+      <span class="meta">Score: <span id="score">0</span></span>
+      <span class="meta">High Score: <span id="highScore">0</span></span>
+    </div>
+    <div class="grid" id="grid"></div>
+  </main>
+  <script>
+    const root=document.documentElement;const themeBtn=document.getElementById('themeToggle');
+    const saved=localStorage.getItem('theme'); if(saved==='light') root.classList.add('light');
+    themeBtn.textContent=root.classList.contains('light')?'🌞':'🌙';
+    themeBtn.addEventListener('click',()=>{root.classList.toggle('light'); localStorage.setItem('theme',root.classList.contains('light')?'light':'dark'); themeBtn.textContent=root.classList.contains('light')?'🌞':'🌙';});
+
+    const grid = document.getElementById('grid');
+    const timeLeftEl = document.getElementById('time-left');
+    const scoreEl = document.getElementById('score');
+    const highScoreEl = document.getElementById('highScore');
+    const startBtn = document.getElementById('startBtn');
+    
+    let score = 0, timeLeft = 0, currentMoleId = null, timerId, moleTimerId;
+    let highScore = localStorage.getItem('whackamole_best_score') || 0;
+    highScoreEl.textContent = highScore;
+
+    for (let i = 0; i < 9; i++) {
+        const hole = document.createElement('div');
+        hole.className = 'hole';
+        hole.id = i;
+        grid.appendChild(hole);
+    }
+    const holes = document.querySelectorAll('.hole');
+
+    function startGame() {
+      score = 0; timeLeft = 20;
+      scoreEl.textContent = score;
+      timeLeftEl.textContent = timeLeft;
+      startBtn.disabled = true;
+      if(timerId) clearInterval(timerId);
+      if(moleTimerId) clearInterval(moleTimerId);
+
+      timerId = setInterval(countdown, 1000);
+      moleTimerId = setInterval(randomMole, 700);
+    }
+    
+    function countdown() {
+      timeLeft--;
+      timeLeftEl.textContent = timeLeft;
+      if (timeLeft === 0) {
+        clearInterval(timerId);
+        clearInterval(moleTimerId);
+        holes.forEach(hole => hole.classList.remove('mole'));
+        startBtn.disabled = false;
+        alert(`Game Over! Your final score is ${score}`);
+        if(score > highScore) {
+            highScore = score;
+            highScoreEl.textContent = highScore;
+            localStorage.setItem('whackamole_best_score', highScore);
+        }
+      }
+    }
+
+    function randomMole() {
+        holes.forEach(hole => hole.classList.remove('mole'));
+        const randomHole = holes[Math.floor(Math.random() * 9)];
+        randomHole.classList.add('mole');
+        currentMoleId = randomHole.id;
+    }
+
+    grid.addEventListener('mousedown', (e) => {
+        if (e.target.id === currentMoleId) {
+            score++;
+            scoreEl.textContent = score;
+            e.target.classList.remove('mole');
+            currentMoleId = null; // Prevent multiple scores on one mole
+        }
+    });
+
+    startBtn.addEventListener('click', startGame);
+  </script>
+</body>
+</html>

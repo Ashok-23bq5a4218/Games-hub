@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Memory Cards</title>
+  <link rel="stylesheet" href="games.css" />
+  <style>
+    .board{
+        display:grid; grid-template-columns:repeat(4, minmax(70px, 1fr)); gap:10px;
+        margin-top:16px;
+        perspective: 1000px; /* Added for 3D effect */
+    }
+    .card-container { /* Added: Wrapper for 3D transform */
+        aspect-ratio: 1/1;
+        position: relative;
+    }
+    .card {
+        position: absolute; width: 100%; height: 100%;
+        border-radius:12px;
+        display:grid; place-items:center; font-size:28px; cursor:pointer;
+        backface-visibility: hidden; /* Added */
+        transition: transform 0.5s; /* Added */
+        transform-style: preserve-3d; /* Added */
+    }
+    .card-front {
+        background: var(--card); border: 1px solid var(--border);
+        transform: rotateY(0deg); /* Added */
+        z-index: 2;
+    }
+    .card-back {
+        background: var(--card); border: 1px solid var(--accent);
+        transform: rotateY(180deg); /* Added */
+    }
+    .card-container.revealed .card-front { transform: rotateY(-180deg); } /* Modified */
+    .card-container.revealed .card-back { transform: rotateY(0deg); } /* Modified */
+    .card-container.matched .card-back { /* Added: Match feedback */
+        animation: shimmer .8s;
+        outline: 2px solid var(--accent);
+    }
+    @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+    .hud{display:flex; gap:16px; align-items:center; flex-wrap:wrap}
+  </style>
+</head>
+<body>
+  <header class="header">
+    <a href="../index.html">← Back to Hub</a>
+    <strong>🧠 Memory Cards</strong>
+    <button id="themeToggle" class="theme" aria-label="Toggle theme">🌙</button>
+  </header>
+  <main class="container">
+    <div class="hud">
+      <button id="new">New Game</button>
+      <span id="moves" class="meta">Moves: 0</span>
+      <span id="best" class="meta">Best: —</span>
+      <span id="time" class="meta">Time: 0s</span>
+    </div>
+    <div id="board" class="board"></div>
+  </main>
+
+  <script>
+    const root=document.documentElement;const themeBtn=document.getElementById('themeToggle');
+    const saved=localStorage.getItem('theme'); if(saved==='light') root.classList.add('light');
+    themeBtn.textContent=root.classList.contains('light')?'🌞':'🌙';
+    themeBtn.addEventListener('click',()=>{root.classList.toggle('light'); localStorage.setItem('theme',root.classList.contains('light')?'light':'dark'); themeBtn.textContent=root.classList.contains('light')?'🌞':'🌙';});
+
+    const icons = ['🍎','🍌','🍇','🍒','🍓','🍍','🥝','🍉'];
+    let deck = [];
+    let first = null, second = null, lock=false, moves=0, matched=0, timer=null, seconds=0;
+
+    const board=document.getElementById('board');
+    const movesEl=document.getElementById('moves');
+    const bestEl=document.getElementById('best');
+    const timeEl=document.getElementById('time');
+
+    function start(){
+      const best=localStorage.getItem('memory_best_moves'); bestEl.textContent='Best: ' + (best||'—');
+      seconds=0; timeEl.textContent='Time: 0s'; if(timer) clearInterval(timer); timer=setInterval(()=>{seconds++; timeEl.textContent='Time: '+seconds+'s';}, 1000);
+      const arr = [...icons, ...icons];
+      deck = arr.sort(()=> Math.random()-0.5).map((icon, i)=>({id:i, icon, revealed:false, matched:false}));
+      first=second=null; moves=0; matched=0; movesEl.textContent='Moves: 0';
+      render();
+    }
+
+    function render(){
+      board.innerHTML='';
+      deck.forEach(card=>{
+        // Modified: Create a more complex structure for the 3D flip
+        const container = document.createElement('div');
+        container.className = 'card-container';
+        container.dataset.id = card.id;
+        if (card.revealed || card.matched) container.classList.add('revealed');
+        if (card.matched) container.classList.add('matched');
+
+        const front = document.createElement('div');
+        front.className = 'card card-front';
+        front.textContent = '?';
+
+        const back = document.createElement('div');
+        back.className = 'card card-back';
+        back.textContent = card.icon;
+
+        container.appendChild(front);
+        container.appendChild(back);
+        board.appendChild(container);
+      });
+    }
+
+    function clickCard(id){
+      if(lock) return;
+      const card = deck.find(c=>c.id==id);
+      if(!card || card.matched || card.revealed) return;
+
+      card.revealed=true;
+      document.querySelector(`[data-id='${id}']`).classList.add('revealed');
+      
+      if(!first){ first=card; return; }
+      if(first.id===card.id) return;
+      
+      second=card; moves++; movesEl.textContent='Moves: '+moves; lock=true;
+      
+      setTimeout(()=>{
+        if(first.icon===second.icon){
+          first.matched=second.matched=true; matched+=2;
+          document.querySelector(`[data-id='${first.id}']`).classList.add('matched');
+          document.querySelector(`[data-id='${second.id}']`).classList.add('matched');
+        } else {
+          first.revealed=second.revealed=false;
+          document.querySelector(`[data-id='${first.id}']`).classList.remove('revealed');
+          document.querySelector(`[data-id='${second.id}']`).classList.remove('revealed');
+        }
+        first=second=null; lock=false;
+        if(matched===deck.length){
+            clearInterval(timer);
+            saveBest();
+            setTimeout(() => alert('🎉 You won in '+moves+' moves and '+seconds+'s'), 500);
+        }
+      }, 800);
+    }
+
+    function saveBest(){
+      const best=localStorage.getItem('memory_best_moves');
+      if(!best || moves < parseInt(best,10)) localStorage.setItem('memory_best_moves', String(moves));
+      bestEl.textContent='Best: ' + (localStorage.getItem('memory_best_moves') || '—');
+    }
+
+    board.addEventListener('click', (e)=>{
+      const cardContainer = e.target.closest('.card-container');
+      if(!cardContainer) return;
+      clickCard(parseInt(cardContainer.dataset.id,10));
+    });
+    document.getElementById('new').addEventListener('click', start);
+
+    start();
+  </script>
+</body>
+</html>

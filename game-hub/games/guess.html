@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Guess the Number</title>
+  <link rel="stylesheet" href="games.css" />
+</head>
+<body>
+  <header class="header">
+    <a href="../index.html">← Back to Hub</a>
+    <strong>🔢 Guess the Number (1–100)</strong>
+    <button id="themeToggle" class="theme" aria-label="Toggle theme">🌙</button>
+  </header>
+  <main class="container">
+    <p class="meta">Try to guess the secret number in as few attempts as possible.</p>
+    <div class="controls">
+      <input id="guessInput" type="number" min="1" max="100" placeholder="Enter 1–100" />
+      <button id="guessBtn">Guess</button>
+      <button id="resetBtn">Reset</button>
+    </div>
+    <p id="status" class="meta"></p>
+    <p id="attempts" class="meta">Attempts: 0</p>
+    <p id="best" class="meta">Best: —</p>
+  </main>
+
+  <script>
+    const root=document.documentElement;const themeBtn=document.getElementById('themeToggle');
+    const saved=localStorage.getItem('theme'); if(saved==='light') root.classList.add('light');
+    themeBtn.textContent=root.classList.contains('light')?'🌞':'🌙';
+    themeBtn.addEventListener('click',()=>{root.classList.toggle('light'); localStorage.setItem('theme',root.classList.contains('light')?'light':'dark'); themeBtn.textContent=root.classList.contains('light')?'🌞':'🌙';});
+
+    let secret = Math.floor(Math.random()*100)+1;
+    let tries = 0;
+    const input = document.getElementById('guessInput');
+    const btn = document.getElementById('guessBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const status = document.getElementById('status');
+    const attempts = document.getElementById('attempts');
+    const bestEl = document.getElementById('best');
+
+    function updateBest(val){
+      const best = localStorage.getItem('guess_best');
+      if(!best || val < parseInt(best,10)){
+        localStorage.setItem('guess_best', String(val));
+      }
+      bestEl.textContent = 'Best: ' + (localStorage.getItem('guess_best') || '—');
+    }
+    bestEl.textContent = 'Best: ' + (localStorage.getItem('guess_best') || '—');
+    
+    // Added: Function to animate status text
+    function showStatus(msg) {
+      status.textContent = msg;
+      status.className = 'meta pop-in'; // Add class
+      // Remove class after animation so it can be re-triggered
+      setTimeout(() => status.classList.remove('pop-in'), 300);
+    }
+
+    btn.addEventListener('click', ()=>{
+      const num = parseInt(input.value,10);
+      if(Number.isNaN(num) || num<1 || num>100){ showStatus('Enter a valid number 1–100.'); return; }
+      tries++; attempts.textContent = 'Attempts: ' + tries;
+      if(num === secret){
+        showStatus(`✅ Correct! The number was ${secret}.`);
+        updateBest(tries);
+      } else if(num < secret){
+        showStatus('📉 Too low. Try higher.');
+      } else {
+        showStatus('📈 Too high. Try lower.');
+      }
+    });
+
+    resetBtn.addEventListener('click', ()=>{
+      secret = Math.floor(Math.random()*100)+1; tries=0; attempts.textContent='Attempts: 0'; status.textContent=''; input.value='';
+    });
+  </script>
+</body>
+</html>

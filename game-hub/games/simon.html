@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Simon Says</title>
+  <link rel="stylesheet" href="games.css" />
+  <style>
+    .simon-container { display: grid; grid-template-columns: repeat(2, 150px); grid-template-rows: repeat(2, 150px); gap: 20px; }
+    .pad { width: 150px; height: 150px; border-radius: 20px; cursor: pointer; border: 5px solid var(--border); }
+    .pad.active { filter: brightness(1.5); transform: scale(0.98); }
+    #green { background-color: #4CAF50; } #red { background-color: #f44336; }
+    #yellow { background-color: #ffeb3b; } #blue { background-color: #2196F3; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <a href="../index.html">← Back to Hub</a>
+    <strong>🔵🔴🟡🟢 Simon Says</strong>
+    <button id="themeToggle" class="theme" aria-label="Toggle theme">🌙</button>
+  </header>
+  <main class="container">
+    <div class="controls">
+      <button id="startBtn">Start Game</button>
+      <span class="meta">Level: <span id="level">0</span></span>
+      <span class="meta">Best Level: <span id="bestLevel">0</span></span>
+    </div>
+    <div class="simon-container" style="margin-top:20px">
+      <div class="pad" id="green"></div> <div class="pad" id="red"></div>
+      <div class="pad" id="yellow"></div> <div class="pad" id="blue"></div>
+    </div>
+    <p id="status" class="meta"></p>
+  </main>
+  <script>
+    const root=document.documentElement;const themeBtn=document.getElementById('themeToggle');
+    const saved=localStorage.getItem('theme'); if(saved==='light') root.classList.add('light');
+    themeBtn.textContent=root.classList.contains('light')?'🌞':'🌙';
+    themeBtn.addEventListener('click',()=>{root.classList.toggle('light'); localStorage.setItem('theme',root.classList.contains('light')?'light':'dark'); themeBtn.textContent=root.classList.contains('light')?'🌞':'🌙';});
+
+    const pads = document.querySelectorAll('.pad');
+    const startBtn = document.getElementById('startBtn');
+    const levelEl = document.getElementById('level');
+    const bestLevelEl = document.getElementById('bestLevel');
+    const statusEl = document.getElementById('status');
+
+    const colors = ['green', 'red', 'yellow', 'blue'];
+    let sequence, playerSequence, level, bestLevel = localStorage.getItem('simon_best_level') || 0;
+    bestLevelEl.textContent = bestLevel;
+
+    function startGame() {
+        sequence = []; playerSequence = []; level = 0;
+        startBtn.disabled = true;
+        statusEl.textContent = "Watch carefully...";
+        nextLevel();
+    }
+
+    function nextLevel() {
+        playerSequence = [];
+        level++;
+        levelEl.textContent = level;
+        const nextColor = colors[Math.floor(Math.random() * 4)];
+        sequence.push(nextColor);
+        playSequence();
+    }
+
+    function playSequence() {
+        let i = 0;
+        const intervalId = setInterval(() => {
+            lightUp(sequence[i]);
+            i++;
+            if (i >= sequence.length) {
+                clearInterval(intervalId);
+                statusEl.textContent = "Your turn!";
+            }
+        }, 800);
+    }
+    
+    function lightUp(color) {
+        const pad = document.getElementById(color);
+        pad.classList.add('active');
+        setTimeout(() => pad.classList.remove('active'), 400);
+    }
+
+    function handlePlayerInput(e) {
+        if (level === 0 || statusEl.textContent !== "Your turn!") return;
+        const color = e.target.id;
+        playerSequence.push(color);
+        lightUp(color);
+
+        if (playerSequence[playerSequence.length - 1] !== sequence[playerSequence.length - 1]) {
+            gameOver();
+            return;
+        }
+
+        if (playerSequence.length === sequence.length) {
+            statusEl.textContent = "Correct! Watch...";
+            setTimeout(nextLevel, 1000);
+        }
+    }
+
+    function gameOver() {
+        statusEl.textContent = `Game Over! You reached level ${level}.`;
+        if (level > bestLevel) {
+            bestLevel = level;
+            bestLevelEl.textContent = bestLevel;
+            localStorage.setItem('simon_best_level', bestLevel);
+        }
+        startBtn.disabled = false;
+        level = 0;
+    }
+
+    startBtn.addEventListener('click', startGame);
+    pads.forEach(pad => pad.addEventListener('click', handlePlayerInput));
+  </script>
+</body>
+</html>

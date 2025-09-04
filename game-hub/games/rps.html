@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rock • Paper • Scissors</title>
+  <link rel="stylesheet" href="games.css" />
+  <style>
+    .choices{display:flex; gap:10px; margin:16px 0}
+    .choice{font-size:28px; width:70px; height:70px; display:grid; place-items:center; border-radius:14px; border:1px solid var(--border); background:var(--card); cursor:pointer}
+    .score{display:flex; gap:16px; margin-top:10px}
+  </style>
+</head>
+<body>
+  <header class="header">
+    <a href="../index.html">← Back to Hub</a>
+    <strong>✊✋✌️ Rock • Paper • Scissors</strong>
+    <button id="themeToggle" class="theme" aria-label="Toggle theme">🌙</button>
+  </header>
+  <main class="container">
+    <div class="choices">
+      <button class="choice" data-move="rock">✊</button>
+      <button class="choice" data-move="paper">✋</button>
+      <button class="choice" data-move="scissors">✌️</button>
+    </div>
+    <p id="round" class="meta">Make your move!</p>
+    <div class="score">
+      <span id="you" class="meta">You: 0</span>
+      <span id="cpu" class="meta">CPU: 0</span>
+      <span id="streak" class="meta">Streak: 0</span>
+      <span id="best" class="meta">Best: —</span>
+    </div>
+    <button id="reset">Reset</button>
+  </main>
+
+  <script>
+    const root=document.documentElement;const themeBtn=document.getElementById('themeToggle');
+    const saved=localStorage.getItem('theme'); if(saved==='light') root.classList.add('light');
+    themeBtn.textContent=root.classList.contains('light')?'🌞':'🌙';
+    themeBtn.addEventListener('click',()=>{root.classList.toggle('light'); localStorage.setItem('theme',root.classList.contains('light')?'light':'dark'); themeBtn.textContent=root.classList.contains('light')?'🌞':'🌙';});
+
+    const moves=['rock','paper','scissors'];
+    const beats={rock:'scissors', paper:'rock', scissors:'paper'};
+    let you=0, cpu=0, streak=0, best=parseInt(localStorage.getItem('rps_best_streak')||'0',10);
+
+    const roundEl=document.getElementById('round');
+    const youEl=document.getElementById('you');
+    const cpuEl=document.getElementById('cpu');
+    const streakEl=document.getElementById('streak');
+    const bestEl=document.getElementById('best'); bestEl.textContent='Best: ' + (best||'—');
+
+    function play(yourMove){
+      const cpuMove=moves[Math.floor(Math.random()*3)];
+      if(yourMove===cpuMove){ roundEl.textContent=`You: ${icon(yourMove)}  •  CPU: ${icon(cpuMove)}  → Draw.`; streak=0; }
+      else if(beats[yourMove]===cpuMove){ roundEl.textContent=`You: ${icon(yourMove)}  •  CPU: ${icon(cpuMove)}  → You win!`; you++; streak++; if(streak>best){best=streak; localStorage.setItem('rps_best_streak', String(best)); bestEl.textContent='Best: '+best;} }
+      else { roundEl.textContent=`You: ${icon(yourMove)}  •  CPU: ${icon(cpuMove)}  → CPU wins.`; cpu++; streak=0; }
+      update();
+    }
+    function icon(m){ return m==='rock'?'✊':m==='paper'?'✋':'✌️'; }
+    function update(){ youEl.textContent='You: '+you; cpuEl.textContent='CPU: '+cpu; streakEl.textContent='Streak: '+streak; }
+
+    document.querySelectorAll('.choice').forEach(btn=> btn.addEventListener('click',()=> play(btn.dataset.move)));
+    document.getElementById('reset').addEventListener('click',()=>{you=cpu=streak=0; roundEl.textContent='Make your move!'; update();});
+  </script>
+</body>
+</html>
